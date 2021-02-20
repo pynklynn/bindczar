@@ -1,0 +1,27 @@
+{
+  "name": "bindczar",
+  "version": "0.0.0",
+  "description": "Adds ability to have two-way binding in native web component templates",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "static-server -p 8080 -i demo.html",
+    "dev": "concurrently npm:start:dev npm:build:dev",
+    "build:dev": "tsc -p tsconfig.json -w"
+  },
+  "keywords": [
+    "javascript",
+    "js",
+    "typescript",
+    "webcomponents",
+    "components"
+  ],
+  "author": "Will Steinmetz",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^6.0.0",
+    "static-server": "^2.2.1",
+    "typescript": "^4.1.5"
+  },
+  "dependencies": {}
+}
