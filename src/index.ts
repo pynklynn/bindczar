@@ -27,28 +27,12 @@ function BindCzar(o: any, ...props: BCPropertySpec[]) {
       };
     }
 
-    const privateProp = `_${prop.name}`;
-    // this[privateProp] = undefined;
-    o.prototype[privateProp] = undefined;
-    // Object.defineProperty(this, prop.name, {
-    //   get() {
-    //     return this.getAttribute(elementAttr);
-    //   },
-    //   set(newValue: any) {
-    //     this[privateProp] = newValue;
-    //     this.setAttribute(elementAttr, newValue);
-    //   }
-    // });
-    // // TODO make work right for arrays and objects
-    // this[prop.name] = prop.value ? new prop.type(prop.value) : new prop.type();
     Object.defineProperty(o.prototype, prop.name, {
       get() {
         return this.getAttribute(elementAttr);
       },
       set(newValue: any) {
-        console.log(this);
-        this[privateProp] = newValue;
-        this.setAttribute(elementAttr, newValue);
+        this.setAttribute.apply(this, [elementAttr, newValue.toString()]);
       }
     });
     // TODO make work right for arrays and objects
