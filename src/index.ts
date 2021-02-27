@@ -70,10 +70,6 @@ function BindCzar(o: any, ...props: BCPropertySpec[]) {
         }
       }
     });
-    // TODO default value not being set when the attribute isn't available
-    /// possibly in connectedCallback?
-    // TODO make work right for arrays and objects
-    // o.prototype[prop.name] = prop.value ? new prop.type(prop.value) : new prop.type();
   }
 
   const existingAttributeChangedCallback = o.prototype.attributeChangedCallback;
@@ -101,11 +97,15 @@ function BindCzar(o: any, ...props: BCPropertySpec[]) {
       for (let i = 0, len = attributes.length; i < len; i++) {
         const meta = o._meta[attributes[i]];
         const attribute = meta.name;
-        // this[meta.name] = meta.default ? new meta.type(meta.default) : new meta.type();
-        this[meta.name] = meta.default ? new meta.type(meta.default) : null;
-        // if (meta.default) {
-        //   this[meta.name] = new meta.type(meta.default);
-        // }
+        // TODO make work right for arrays and objects
+        const defaultAttribute = this.getAttribute(attributes[i]);
+        if (defaultAttribute) {
+          this[meta.name] = defaultAttribute;
+        } else if (meta.default) {
+          this[meta.name] = new meta.type(meta.default);
+        } else {
+          this[meta.name] = new meta.type();
+        }
         const selector = `textarea[bc-${attribute}],input[bc-${attribute}],select[bc-${attribute}]`;
         Array.from(document.querySelectorAll(selector)).forEach(el => {
           (el as HTMLElement).addEventListener('input', (event: Event) => {
