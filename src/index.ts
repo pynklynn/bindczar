@@ -32,7 +32,11 @@ function BindCzar(o: any, ...props: BCPropertySpec[]) {
         return this.getAttribute(elementAttr);
       },
       set(newValue: any) {
-        this.setAttribute.apply(this, [elementAttr, newValue.toString()]);
+        try {
+          this.setAttribute.apply(this, [elementAttr, newValue.toString()]);
+        } catch(e: unknown) {
+          // do nothing - often will fail during attachment but work after
+        }
       }
     });
     // TODO make work right for arrays and objects
@@ -44,9 +48,6 @@ function BindCzar(o: any, ...props: BCPropertySpec[]) {
     if (existingAttributeChangedCallback) {
       existingAttributeChangedCallback(name, oldValue, newValue);
     }
-    console.log('name', name);
-    console.log('oldValue', oldValue);
-    console.log('newValue', newValue);
   }
 
   return o;
