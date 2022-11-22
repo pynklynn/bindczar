@@ -5,7 +5,6 @@ export type BCPropertySpec = {
   attribute?: string;
 }
 
-// TODO figure out a better type, possibly HTMLElement with some extensions
 function BindCzar(...props: BCPropertySpec[]): Function {
   return function <T extends { new(...args: any[]): {} }>(constructor: T) {
     const o = constructor as any;
@@ -24,6 +23,7 @@ function BindCzar(...props: BCPropertySpec[]): Function {
       if (!o.observedAttributes.includes(elementAttr)) {
         o.observedAttributes.push(elementAttr);
       }
+
       if (!o._meta.hasOwnProperty(elementAttr)) {
         o._meta[elementAttr] = {
           name: prop.name,
@@ -36,38 +36,50 @@ function BindCzar(...props: BCPropertySpec[]): Function {
 
       Object.defineProperty(o.prototype, prop.name, {
         get() {
-          // TODO handle re-typing
-          // return this.getAttribute(elementAttr);
           return this[`_${prop.name}`];
         },
         set(newValue: any) {
           try {
-            this[`_${prop.name}`] = newValue;
-            // TODO handle complex types
-            if (newValue.toString() != this.getAttribute(elementAttr)) {
-              // TODO handle appropriate stringifying (eg arrays and objects)
-              this.setAttribute.apply(this, [elementAttr, newValue.toString()]);
+            try {
+              // handle complex types
+              this[`_${prop.name}`] = JSON.parse(newValue);
+            } catch (e) {
+              // not a complex type so just set it
+              this[`_${prop.name}`] = newValue;
             }
-            Array.from(this.querySelectorAll([`[bc-${prop.name.toLowerCase()}]`])).forEach((el): void => {
-              if ((el as HTMLSelectElement).querySelectorAll('option').length) {
-                const selectBox = el as HTMLSelectElement;
-                const selectedOption = selectBox.querySelector('option[selected]');
-                if (selectedOption) {
-                  selectedOption.removeAttribute('selected');
-                }
-                const newSelectedOption = selectBox.querySelector(`option[value="${newValue.toString()}"]`);
-                if (newSelectedOption) {
-                  newSelectedOption.setAttribute('selected', '');
-                }
-              } else if ((el as HTMLInputElement).value) {
-                (el as HTMLInputElement).value = newValue.toString();
-              } else {
-                (el as HTMLElement).innerHTML = newValue.toString();
+
+            if (o._meta[elementAttr].type === Array || o._meta[elementAttr].type === Object) {
+              if (JSON.stringify(newValue) !== this.getAttribute(elementAttr)) {
+                this.setAttribute.apply(this, [elementAttr, JSON.stringify(newValue)]);
               }
-            });
+            } else {
+              if (!!newValue && newValue.toString() !== this.getAttribute(elementAttr)) {
+                this.setAttribute.apply(this, [elementAttr, newValue.toString()]);
+              }
+            }
+
+            if (newValue !== null && newValue !== undefined) {
+              Array.from(this.querySelectorAll([`[bc-${prop.name.toLowerCase()}]`])).forEach((el): void => {
+                // TODO check for <template> tag
+                if ((el as HTMLSelectElement).querySelectorAll('option').length) {
+                  const selectBox = el as HTMLSelectElement;
+                  const selectedOption = selectBox.querySelector('option[selected]');
+                  if (selectedOption) {
+                    selectedOption.removeAttribute('selected');
+                  }
+                  const newSelectedOption = selectBox.querySelector(`option[value="${newValue.toString()}"]`);
+                  if (newSelectedOption) {
+                    newSelectedOption.setAttribute('selected', '');
+                  }
+                } else if ((el as HTMLInputElement).value) {
+                  (el as HTMLInputElement).value = newValue.toString();
+                } else {
+                  (el as HTMLElement).innerHTML = newValue.toString();
+                }
+              });
+            }
           } catch (e: unknown) {
             // do nothing - often will fail during attachment but work after
-            // console.log(e);
           }
         }
       });
@@ -79,10 +91,15 @@ function BindCzar(...props: BCPropertySpec[]): Function {
         if (existingAttributeChangedCallback) {
           existingAttributeChangedCallback.apply(this, [name, oldValue, newValue]);
         }
-        if (o._meta.hasOwnProperty(name)) {
+        let parsedValue;
+        try {
+          parsedValue = JSON.parse(newValue);
+        } catch (e) {
+          parsedValue = newValue;
+        }
+        if (o._meta.hasOwnProperty(name) && parsedValue !== this[o._meta[name].name]) {
           const meta = o._meta[name];
-          // TODO handle complex types
-          o.prototype[meta.name] = new meta.type(newValue);
+          this[meta.name] = parsedValue;
         }
       }
     });
@@ -98,19 +115,26 @@ function BindCzar(...props: BCPropertySpec[]): Function {
         for (let i = 0, len = attributes.length; i < len; i++) {
           const meta = o._meta[attributes[i]];
           const attribute = meta.name;
-          // TODO make work right for arrays and objects
           const defaultAttribute = this.getAttribute(attributes[i]);
           if (defaultAttribute) {
-            this[meta.name] = defaultAttribute;
+            try {
+              // handle complex types
+              this[meta.name] = JSON.parse(defaultAttribute);
+            } catch (e) {
+              this[meta.name] = defaultAttribute;
+            }
           } else if (meta.default) {
-            this[meta.name] = new meta.type(meta.default);
+            if (meta.type === Array || meta.type === Object) {
+              this[meta.name] = meta.default;
+            } else {
+              this[meta.name] = new meta.type(meta.default);
+            }
           } else {
             this[meta.name] = new meta.type();
           }
           const selector = `textarea[bc-${attribute}],input[bc-${attribute}],select[bc-${attribute}]`;
           Array.from(document.querySelectorAll(selector)).forEach(el => {
             (el as HTMLElement).addEventListener('input', (event: Event) => {
-              // TODO handle complex types
               const target = (event.target as HTMLInputElement);
               this[attribute] = new meta.type(target.value);
             });

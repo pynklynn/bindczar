@@ -25,7 +25,14 @@ const prop4 = {
   attribute: 'drop-down'
 };
 
-@BindCzar(prop1, prop2, prop3, prop4)
+const prop5 = {
+  type: Array,
+  name: 'dropDownValues',
+  attribute: 'drop-down-values',
+  value: []
+}
+
+@BindCzar(prop1, prop2, prop3, prop4, prop5)
 class TestComponent extends HTMLElement {
   connectedCallback() {
     // @ts-ignore
@@ -46,7 +53,7 @@ class TestComponent extends HTMLElement {
       </p>
       <p bc-textArea></p>
       <div>
-        <textarea bc-textArea>${textArea}</textArea>
+        <textarea bc-textArea>${textArea || ''}</textArea>
       </div>
       <p bc-dropDown></p>
       <p>
@@ -62,11 +69,12 @@ class TestComponent extends HTMLElement {
   }
 
   // @ts-ignore
-  attributeChangedCallback(name, oldValue, newValue) {
-    console.log('bam!!!');
+  // attributeChangedCallback(name, oldValue, newValue) {
+    // console.log('bam!!!');
+    // console.log(' ');
     // console.log(name);
     // console.log(newValue);
-  }
+  // }
 }
 
 export { TestComponent }
