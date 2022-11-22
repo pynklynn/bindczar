@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "static-server -p 8080 -i demo.html",
-    "dev": "concurrently npm:start:dev npm:build:dev",
-    "build:dev": "tsc -p tsconfig.json -w"
+    "start:dev": "static-server -p 8080",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "javascript",
@@ -19,9 +20,10 @@
   "author": "Will Steinmetz",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^18.11.9",
     "concurrently": "^6.0.0",
     "static-server": "^2.2.1",
-    "typescript": "^4.1.5"
-  },
-  "dependencies": {}
+    "typescript": "^4.1.5",
+    "vite": "^3.2.4"
+  }
 }

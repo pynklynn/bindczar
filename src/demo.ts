@@ -1,4 +1,4 @@
-import { BindCzar } from './dist/index.js';
+import { BindCzar } from './';
 
 const prop1 = {
   type: String,
@@ -25,25 +25,28 @@ const prop4 = {
   attribute: 'drop-down'
 };
 
-const TestComponent = BindCzar(class extends HTMLElement {
+@BindCzar(prop1, prop2, prop3, prop4)
+class TestComponent extends HTMLElement {
   connectedCallback() {
-    this.innerHTML = `
+    // @ts-ignore
+    const { name, num, textArea } = this;
+    this.innerHTML = /* html */ `
       <p>
-        Hello, <span bc-name>${this.name}</span>!
+        Hello, <span bc-name>${name}</span>!
       </p>
       <p>
-        <input type="text" bc-name value="${this.name}">
+        <input type="text" bc-name value="${name}">
       </p>
       <tr>
       <p>
-        I'm a number: <span bc-num>${this.num}</span>!
+        I'm a number: <span bc-num>${num}</span>!
       </p>
       <p>
-        <input type="number" bc-num value="${this.num}">
+        <input type="number" bc-num value="${num}">
       </p>
       <p bc-textArea></p>
       <div>
-        <textarea bc-textArea>${this.textArea}</textArea>
+        <textarea bc-textArea>${textArea}</textArea>
       </div>
       <p bc-dropDown></p>
       <p>
@@ -58,11 +61,12 @@ const TestComponent = BindCzar(class extends HTMLElement {
     `;
   }
 
+  // @ts-ignore
   attributeChangedCallback(name, oldValue, newValue) {
     console.log('bam!!!');
     // console.log(name);
     // console.log(newValue);
   }
-}, prop1, prop2, prop3, prop4);
+}
 
 export { TestComponent }
